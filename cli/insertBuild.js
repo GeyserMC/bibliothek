@@ -149,13 +149,19 @@ async function run() {
       "project": project.value._id,
       "version": version.value._id
     }, {sort: {_id: -1}});
-    let changes = [];
+    const changes = [];
     const lastBuild = previousBuild && previousBuild.changes.length ? previousBuild.changes.slice(0, 1)[0].commit : "HEAD^1";
-    const commits = gitlog({
-      repo: repositoryPath,
-      fields: ["hash", "subject", "rawBody"],
-      branch: lastBuild + "...HEAD"
-    });
+    const commits = [];
+    try {
+      commits = gitlog({
+        repo: repositoryPath,
+        fields: ["hash", "subject", "rawBody"],
+        branch: lastBuild + "...HEAD"
+      });
+    } catch (error) {
+      // Likely failed due to history be broken by a force push
+      commits = [];
+    }
     commits.forEach(function (commit) {
       changes.push({
         "commit": commit.hash,
